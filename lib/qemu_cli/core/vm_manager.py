@@ -4,6 +4,7 @@ import shlex
 from typing import List, Optional
 
 from .debug_log import trace
+from .descriptor_version import verify_descriptor_version
 from .vm_descriptor import VirtualMachineDescriptor
 from .errors import QemuCLIError
 from .serialization import deserialize_descriptor, serialize_descriptor
@@ -55,6 +56,7 @@ class VirtualMachineManager:
             descriptor = deserialize_descriptor(name, fh.read())
         if not descriptor.cmdline:
             raise QemuCLIError(f"corrupt definition: {p}")
+        verify_descriptor_version(descriptor)
         return descriptor
 
     @trace

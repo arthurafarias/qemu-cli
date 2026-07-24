@@ -21,6 +21,7 @@ _PATCHED_DIR_ATTRS = {
     "qemu_cli.core.pidfile": ("STATE_DIR",),
     "qemu_cli.core.vm_lifecycle_manager": ("STATE_DIR",),
     "qemu_cli.core.process_engine": ("STATE_DIR",),
+    "qemu_cli.core.git_fetch": ("GIT_CACHE_DIR",),
 }
 
 
@@ -30,11 +31,18 @@ def isolated_dirs(tmp_path, monkeypatch):
     system_dir = str(tmp_path / "system" / "vms")
     user_dir = str(tmp_path / "user" / "vms")
     state_dir = str(tmp_path / "state" / "run")
-    values = {"SYSTEM_DIR": system_dir, "USER_DIR": user_dir, "STATE_DIR": state_dir}
+    git_cache_dir = str(tmp_path / "cache" / "git")
+    values = {
+        "SYSTEM_DIR": system_dir, "USER_DIR": user_dir, "STATE_DIR": state_dir,
+        "GIT_CACHE_DIR": git_cache_dir,
+    }
 
     for mod_name, attrs in _PATCHED_DIR_ATTRS.items():
         mod = importlib.import_module(mod_name)
         for attr in attrs:
             monkeypatch.setattr(mod, attr, values[attr])
 
-    return SimpleNamespace(system_dir=system_dir, user_dir=user_dir, state_dir=state_dir)
+    return SimpleNamespace(
+        system_dir=system_dir, user_dir=user_dir, state_dir=state_dir,
+        git_cache_dir=git_cache_dir,
+    )

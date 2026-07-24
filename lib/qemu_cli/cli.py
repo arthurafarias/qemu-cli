@@ -7,6 +7,7 @@ VirtualMachineLifecycleManager (qemu process lifecycle), which hold all the actu
 business logic.
 """
 
+import dataclasses
 import datetime
 import functools
 import logging
@@ -69,19 +70,47 @@ def vm_group():
 @click.option("-n", "--name", required=True)
 @click.option("--cmdline", required=True, help="full qemu command line")
 @click.option("-f", "--force", is_flag=True, help="overwrite")
+@click.option("--qemu-version", "qemu_version", default="", metavar="SPEC",
+              help="required qemu version, checked at run time "
+                   "(e.g. '8.2', '>=8.0'; no operator means exact match)")
 @click.option("--pre-hook", "pre_hook", multiple=True, metavar="CMD",
               help="shell command to run before start (repeatable)")
 @click.option("--post-hook", "post_hook", multiple=True, metavar="CMD",
               help="shell command to run after the vm exits (repeatable)")
 @handle_errors
-def vm_create(name, cmdline, force, pre_hook, post_hook):
+def vm_create(name, cmdline, force, qemu_version, pre_hook, post_hook):
     descriptor = core.VirtualMachineDescriptor(
         name=name,
         cmdline=cmdline,
         workdir=os.getcwd(),
         created=datetime.datetime.now().isoformat(timespec="seconds"),
+        qemu_version=qemu_version,
         pre_hook=list(pre_hook),
         post_hook=list(post_hook),
+    )
+    dest = core.VirtualMachineManager().create(descriptor, force=force)
+    click.echo(f"{name}  ->  {dest}")
+
+
+@vm_group.command("pull", help="import a vm definition from a git repo")
+@click.argument("url")
+@click.argument("path", default="vm.ini")
+@click.option("-n", "--name", help="name for the imported vm "
+                                    "(default: derived from PATH's filename)")
+@click.option("--ref", help="git branch/tag/commit to fetch (default: repo's default branch)")
+@click.option("-f", "--force", is_flag=True, help="overwrite")
+@handle_errors
+def vm_pull(url, path, name, ref, force):
+    name = name or os.path.splitext(os.path.basename(path))[0]
+    text = core.fetch_descriptor(url, path, ref=ref)
+    descriptor = core.deserialize_descriptor(name, text)
+    if not descriptor.cmdline:
+        raise core.QemuCLIError(f"corrupt descriptor at {path}")
+    core.verify_descriptor_version(descriptor)
+    descriptor = dataclasses.replace(
+        descriptor,
+        workdir=os.getcwd(),
+        created=datetime.datetime.now().isoformat(timespec="seconds"),
     )
     dest = core.VirtualMachineManager().create(descriptor, force=force)
     click.echo(f"{name}  ->  {dest}")
@@ -137,6 +166,8 @@ def vm_inspect(name):
     click.echo(f"created: {d.created}")
     click.echo(f"workdir: {d.workdir}")
     click.echo(f"status:  {'running (pid ' + str(pid) + ')' if pid else 'stopped'}")
+    if d.qemu_version:
+        click.echo(f"qemu-version: {d.qemu_version}")
     for label, hooks in (("pre-hook", d.pre_hook), ("post-hook", d.post_hook)):
         if hooks:
             click.echo(f"{label}:")
@@ -196,6 +227,24 @@ def stop_cmd(name, timeout):
 
 
 main.add_command(vm_ps, name="ps")
+
+
+@main.group("image", help="manage vm disk/cd images")
+def image_group():
+    pass
+
+
+@image_group.command("pull", help="download an image via http(s) or magnet/torrent link")
+@click.argument("uri")
+@click.option("-o", "--output", "filename", metavar="FILENAME",
+              help="filename to save as (default: let aria2c name it)")
+@click.option("-d", "--dest", "dest_dir", metavar="DIR",
+              help=f"destination directory (default: {core.IMAGE_CACHE_DIR})")
+@handle_errors
+def image_pull(uri, filename, dest_dir):
+    dest_dir = dest_dir or core.IMAGE_CACHE_DIR
+    dest = core.download_image(uri, dest_dir, filename=filename)
+    click.echo(f"downloaded to {dest}")
 
 
 if __name__ == "__main__":

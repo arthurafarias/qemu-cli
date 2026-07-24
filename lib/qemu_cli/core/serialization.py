@@ -2,7 +2,7 @@ import configparser
 import io
 
 from .debug_log import trace
-from .vm_descriptor import VirtualMachineDescriptor
+from .vm_descriptor import CURRENT_DESCRIPTOR_VERSION, VirtualMachineDescriptor
 from .get_hooks import get_hooks
 
 
@@ -15,6 +15,8 @@ def serialize_descriptor(descriptor: VirtualMachineDescriptor) -> str:
         "cmdline": descriptor.cmdline,
         "workdir": descriptor.workdir,
         "created": descriptor.created,
+        "qemu-version": descriptor.qemu_version,
+        "descriptor-version": descriptor.descriptor_version,
         "pre-hook": "\n".join(descriptor.pre_hook),
         "post-hook": "\n".join(descriptor.post_hook),
     }
@@ -41,6 +43,8 @@ def deserialize_descriptor(name: str, text: str) -> VirtualMachineDescriptor:
         cmdline=vm.get("cmdline", ""),
         workdir=vm.get("workdir", "-"),
         created=vm.get("created", "-"),
+        qemu_version=vm.get("qemu-version", ""),
+        descriptor_version=vm.get("descriptor-version", CURRENT_DESCRIPTOR_VERSION),
         pre_hook=get_hooks(vm, "pre-hook"),
         post_hook=get_hooks(vm, "post-hook"),
     )
