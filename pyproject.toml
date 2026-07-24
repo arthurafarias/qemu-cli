@@ -2,11 +2,33 @@
 name = "qemu-cli"
 version = "0.1.0"
 description = "Docker-style CLI for managing QEMU VM command lines"
+readme = "readme.md"
 requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Arthur de Araújo Farias", email = "arthur@afarias.org"},
+]
+keywords = ["qemu", "cli", "virtualization", "vm"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: System :: Emulators",
+    "Topic :: System :: Systems Administration",
+]
 dependencies = ["click>=8"]
 
+[project.urls]
+Homepage = "https://github.com/arthurafarias/qemu-cli"
+Repository = "https://github.com/arthurafarias/qemu-cli"
+Issues = "https://github.com/arthurafarias/qemu-cli/issues"
+
 [project.optional-dependencies]
-test = ["pytest>=8"]
+test = ["pytest>=8", "pytest-cov>=5"]
 
 [project.scripts]
 qemu = "qemu_cli.cli:main"
@@ -16,6 +38,7 @@ package-dir = {"" = "lib"}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "--cov=qemu_cli --cov-report=term-missing"
 
 [build-system]
 requires = ["setuptools>=61"]

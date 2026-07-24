@@ -2,8 +2,8 @@ name: Deploy GitHub Pages
 
 on:
   push:
-    branches: [main]
-    paths: [public/**, .github/workflows/pages.yml]
+    branches: [master]
+    paths: [docs/**, lib/**, tests/**, pyproject.toml, .github/workflows/pages.yml]
   workflow_dispatch:
 
 permissions:
@@ -23,9 +23,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install package and test dependencies
+        run: pip install -e ".[test]"
+
+      - name: Run tests with coverage
+        run: python -m pytest --cov-report=html:_site/coverage
+
+      - name: Assemble site
+        run: cp -r docs/. _site/
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: public
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
