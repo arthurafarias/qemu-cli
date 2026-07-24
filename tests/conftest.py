@@ -19,8 +19,8 @@ _PATCHED_DIR_ATTRS = {
     "qemu_cli.core.stores": ("SYSTEM_DIR", "USER_DIR"),
     "qemu_cli.core.write_store": ("SYSTEM_DIR", "USER_DIR"),
     "qemu_cli.core.pidfile": ("STATE_DIR",),
-    "qemu_cli.core.run_vm": ("STATE_DIR",),
-    "qemu_cli.core.start_detached": ("STATE_DIR",),
+    "qemu_cli.core.vm_lifecycle_manager": ("STATE_DIR",),
+    "qemu_cli.core.process_engine": ("STATE_DIR",),
 }
 
 

@@ -2,11 +2,16 @@
 
 This module is a thin presentation layer: every command decorates a
 function whose body parses/echoes and then calls straight into
-qemu_cli.core, which holds all the actual business logic.
+qemu_cli.core's VmManager (vm definition persistence) and
+VmLifecycleManager (qemu process lifecycle), which hold all the actual
+business logic.
 """
 
+import datetime
 import functools
 import logging
+import os
+import shlex
 
 import click
 
@@ -70,46 +75,68 @@ def vm_group():
               help="shell command to run after the vm exits (repeatable)")
 @handle_errors
 def vm_create(name, cmdline, force, pre_hook, post_hook):
-    dest = core.create_vm(name, cmdline, force=force,
-                           pre_hook=list(pre_hook), post_hook=list(post_hook))
+    descriptor = core.VmDescriptor(
+        name=name,
+        cmdline=cmdline,
+        workdir=os.getcwd(),
+        created=datetime.datetime.now().isoformat(timespec="seconds"),
+        pre_hook=list(pre_hook),
+        post_hook=list(post_hook),
+    )
+    dest = core.VmManager().create(descriptor, force=force)
     click.echo(f"{name}  ->  {dest}")
 
 
 @vm_group.command("list", help="list defined vms")
 @handle_errors
 def vm_list():
-    entries = core.list_vms()
-    if not entries:
+    vm_manager = core.VmManager()
+    lifecycle = core.VmLifecycleManager()
+    descriptors = vm_manager.list()
+    if not descriptors:
         click.echo("no vms defined")
         return
     click.echo(f"{'NAME':<24}{'STATUS':<12}{'BINARY':<22}DEFINITION")
-    for e in entries:
-        status = "running" if e.running else "-"
-        click.echo(f"{e.name:<24}{status:<12}{e.binary:<22}{e.path}")
+    for d in descriptors:
+        binary = shlex.split(d.cmdline)[0] if d.cmdline else "?"
+        status = "running" if lifecycle.status(d) else "-"
+        path = vm_manager.path_for(d.name)
+        click.echo(f"{d.name:<24}{status:<12}{os.path.basename(binary):<22}{path}")
 
 
 @vm_group.command("ps", help="list running vms")
 @handle_errors
 def vm_ps():
-    rows = core.ps_vms()
+    vm_manager = core.VmManager()
+    lifecycle = core.VmLifecycleManager()
+    rows = []
+    for d in vm_manager.list():
+        pid = lifecycle.status(d)
+        if not pid:
+            continue
+        rows.append((d.name, pid, lifecycle.uptime(d)))
     if not rows:
         click.echo("no vms running")
         return
     click.echo(f"{'NAME':<24}{'PID':<10}UPTIME")
-    for r in rows:
-        click.echo(f"{r.name:<24}{r.pid:<10}{r.uptime}")
+    for name, pid, uptime in rows:
+        click.echo(f"{name:<24}{pid:<10}{uptime}")
 
 
 @vm_group.command("inspect", help="show vm details")
 @click.argument("name")
 @handle_errors
 def vm_inspect(name):
-    d = core.inspect_vm(name)
-    click.echo(f"path:    {d.path}")
+    vm_manager = core.VmManager()
+    lifecycle = core.VmLifecycleManager()
+    d = vm_manager.load(name)
+    path = vm_manager.path_for(name)
+    pid = lifecycle.status(d)
+    click.echo(f"path:    {path}")
     click.echo(f"name:    {d.name}")
     click.echo(f"created: {d.created}")
     click.echo(f"workdir: {d.workdir}")
-    click.echo(f"status:  {'running (pid ' + str(d.pid) + ')' if d.pid else 'stopped'}")
+    click.echo(f"status:  {'running (pid ' + str(pid) + ')' if pid else 'stopped'}")
     for label, hooks in (("pre-hook", d.pre_hook), ("post-hook", d.post_hook)):
         if hooks:
             click.echo(f"{label}:")
@@ -122,7 +149,13 @@ def vm_inspect(name):
 @click.argument("name")
 @handle_errors
 def vm_remove(name):
-    path = core.remove_vm(name)
+    vm_manager = core.VmManager()
+    lifecycle = core.VmLifecycleManager()
+    if not vm_manager.path_for(name):
+        raise core.QemuCliError(f"no such vm: {name}")
+    if lifecycle.is_running(name):
+        raise core.QemuCliError(f"vm '{name}' is running; stop it first")
+    path = vm_manager.remove(name)
     click.echo(f"removed {path}")
 
 
@@ -136,7 +169,10 @@ vm_group.add_command(vm_remove, name="rm")
 @click.argument("extra", nargs=-1, type=click.UNPROCESSED)
 @handle_errors
 def run_cmd(name, detach, extra):
-    result = core.run_vm(name, extra_args=extra, detach=detach, log=click.echo)
+    vm_manager = core.VmManager()
+    lifecycle = core.VmLifecycleManager()
+    descriptor = vm_manager.load(name)
+    result = lifecycle.run(descriptor, extra_args=extra, detach=detach, log=click.echo)
     if result.detached:
         click.echo(f"{name} started (pid {result.pid})")
         return
@@ -150,7 +186,10 @@ def run_cmd(name, detach, extra):
 @click.option("-t", "--timeout", type=float, default=10.0)
 @handle_errors
 def stop_cmd(name, timeout):
-    result = core.stop_vm(name, timeout=timeout)
+    vm_manager = core.VmManager()
+    lifecycle = core.VmLifecycleManager()
+    descriptor = vm_manager.load(name)
+    result = lifecycle.stop(descriptor, timeout=timeout)
     if result.force_killed:
         click.echo(f"{name}: SIGKILL after {timeout}s")
     click.echo(f"{name} stopped")

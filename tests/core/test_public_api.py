@@ -1,26 +1,30 @@
 """Locks down qemu_cli.core's public surface: what's exported, and the
-shape each export must have (dataclass vs. callable vs. traced function).
-A change here should be a deliberate API decision, not an accident.
+shape each export must have (dataclass vs. traced function vs. class with
+traced public methods). A change here should be a deliberate API decision,
+not an accident.
 """
 
 import dataclasses
+import inspect
 
 import qemu_cli.core as core
 from qemu_cli.core.errors import QemuCliError
 
-DATACLASS_EXPORTS = {"VmListEntry", "VmProcEntry", "VmDetail", "RunResult", "StopResult"}
+DATACLASS_EXPORTS = {"VmDescriptor", "VmListEntry", "VmProcEntry", "RunResult", "StopResult"}
 
 FUNCTION_EXPORTS = {
-    "stores", "write_store", "vm_path", "load_vm", "all_vms",
-    "pidfile", "read_pid", "alive", "running_pid",
+    "stores", "write_store",
     "get_hooks", "run_pre_hooks", "run_post_hooks",
-    "create_vm", "list_vms", "ps_vms", "inspect_vm", "remove_vm",
-    "run_vm", "stop_vm",
+    "serialize_descriptor", "deserialize_descriptor",
 }
+
+CLASS_EXPORTS = {"VmManager", "ProcessEngine", "VmLifecycleManager"}
 
 CONSTANT_EXPORTS = {"STATE_DIR", "SYSTEM_DIR", "USER_DIR", "debug_logger"}
 
-EXPECTED_EXPORTS = CONSTANT_EXPORTS | {"QemuCliError"} | DATACLASS_EXPORTS | FUNCTION_EXPORTS
+EXPECTED_EXPORTS = (
+    CONSTANT_EXPORTS | {"QemuCliError"} | DATACLASS_EXPORTS | FUNCTION_EXPORTS | CLASS_EXPORTS
+)
 
 
 def test_all_matches_expected_public_api():
@@ -53,3 +57,23 @@ def test_every_public_function_is_traced():
     for name in FUNCTION_EXPORTS:
         fn = getattr(core, name)
         assert hasattr(fn, "__wrapped__"), f"{name} is missing the @trace decorator"
+
+
+def test_class_exports_are_classes():
+    for name in CLASS_EXPORTS:
+        assert inspect.isclass(getattr(core, name)), f"{name} is not a class"
+
+
+def test_every_public_class_method_is_traced():
+    for cls_name in CLASS_EXPORTS:
+        cls = getattr(core, cls_name)
+        public_methods = [
+            attr_name for attr_name, attr in vars(cls).items()
+            if not attr_name.startswith("_") and inspect.isfunction(attr)
+        ]
+        assert public_methods, f"{cls_name} has no public methods"
+        for attr_name in public_methods:
+            fn = vars(cls)[attr_name]
+            assert hasattr(fn, "__wrapped__"), (
+                f"{cls_name}.{attr_name} is missing the @trace decorator"
+            )

@@ -1,6 +1,5 @@
 from qemu_cli.core.run_result import RunResult
 from qemu_cli.core.stop_result import StopResult
-from qemu_cli.core.vm_detail import VmDetail
 from qemu_cli.core.vm_list_entry import VmListEntry
 from qemu_cli.core.vm_proc_entry import VmProcEntry
 
@@ -13,16 +12,6 @@ def test_vm_list_entry_fields():
 def test_vm_proc_entry_fields():
     e = VmProcEntry(name="n", pid=123, uptime="1h00m")
     assert (e.name, e.pid, e.uptime) == ("n", 123, "1h00m")
-
-
-def test_vm_detail_fields():
-    d = VmDetail(
-        name="n", path="p", created="2024-01-01", workdir="/tmp", pid=None,
-        pre_hook=[], post_hook=[], cmdline="qemu-system-x86_64",
-    )
-    assert d.pid is None
-    assert d.pre_hook == []
-    assert d.post_hook == []
 
 
 def test_run_result_defaults():
