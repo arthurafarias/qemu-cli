@@ -1,6 +1,6 @@
 import configparser
 
-from qemu_cli.core.descriptor import VmDescriptor
+from qemu_cli.core.vm_descriptor import VirtualMachineDescriptor
 from qemu_cli.core.serialization import deserialize_descriptor, serialize_descriptor
 
 
@@ -11,7 +11,7 @@ def _parse(text):
 
 
 def test_serialize_produces_ini_with_expected_fields():
-    d = VmDescriptor(name="vm", cmdline="qemu-system-x86_64 -m 512",
+    d = VirtualMachineDescriptor(name="vm", cmdline="qemu-system-x86_64 -m 512",
                       workdir="/tmp", created="2024-01-01T00:00:00")
     cfg = _parse(serialize_descriptor(d))
     assert cfg["vm"]["name"] == "vm"
@@ -21,7 +21,7 @@ def test_serialize_produces_ini_with_expected_fields():
 
 
 def test_serialize_joins_hooks_with_newline():
-    d = VmDescriptor(
+    d = VirtualMachineDescriptor(
         name="vm", cmdline="true", workdir="/tmp", created="-",
         pre_hook=["ip tuntap add tap0", "ip link set tap0 up"],
         post_hook=["ip tuntap del tap0"],
@@ -31,18 +31,18 @@ def test_serialize_joins_hooks_with_newline():
     assert cfg["vm"]["post-hook"] == "ip tuntap del tap0"
 
 
-def test_serialize_omits_hook_keys_when_absent():
-    d = VmDescriptor(name="vm", cmdline="true", workdir="/tmp", created="-")
+def test_serialize_writes_empty_hook_keys_when_absent():
+    d = VirtualMachineDescriptor(name="vm", cmdline="true", workdir="/tmp", created="-")
     cfg = _parse(serialize_descriptor(d))
-    assert "pre-hook" not in cfg["vm"]
-    assert "post-hook" not in cfg["vm"]
+    assert cfg["vm"]["pre-hook"] == ""
+    assert cfg["vm"]["post-hook"] == ""
 
 
 def test_serialize_interpolation_is_disabled():
     # BasicInterpolation (configparser's default) would collapse "%%" to
     # "%"; serialize/deserialize explicitly opt out so raw values like
     # shell commands containing "%" survive unmodified.
-    d = VmDescriptor(name="vm", cmdline="qemu %% test", workdir="/tmp", created="-")
+    d = VirtualMachineDescriptor(name="vm", cmdline="qemu %% test", workdir="/tmp", created="-")
     text = serialize_descriptor(d)
     assert deserialize_descriptor("vm", text).cmdline == "qemu %% test"
 
@@ -80,7 +80,7 @@ def test_deserialize_parses_hooks_into_lists():
 
 
 def test_round_trip_preserves_all_fields():
-    original = VmDescriptor(
+    original = VirtualMachineDescriptor(
         name="vm", cmdline="qemu-system-x86_64 -m 512", workdir="/tmp",
         created="2024-01-01T00:00:00",
         pre_hook=["echo start"], post_hook=["echo end"],

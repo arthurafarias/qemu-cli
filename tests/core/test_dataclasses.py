@@ -1,16 +1,16 @@
 from qemu_cli.core.run_result import RunResult
 from qemu_cli.core.stop_result import StopResult
-from qemu_cli.core.vm_list_entry import VmListEntry
-from qemu_cli.core.vm_proc_entry import VmProcEntry
+from qemu_cli.core.vm_list_entry import VirtualMachineListEntry
+from qemu_cli.core.vm_proc_entry import VirtualMachineProcEntry
 
 
 def test_vm_list_entry_fields():
-    e = VmListEntry(name="n", path="p", binary="qemu-system-x86_64", running=True)
+    e = VirtualMachineListEntry(name="n", path="p", binary="qemu-system-x86_64", running=True)
     assert (e.name, e.path, e.binary, e.running) == ("n", "p", "qemu-system-x86_64", True)
 
 
 def test_vm_proc_entry_fields():
-    e = VmProcEntry(name="n", pid=123, uptime="1h00m")
+    e = VirtualMachineProcEntry(name="n", pid=123, uptime="1h00m")
     assert (e.name, e.pid, e.uptime) == ("n", 123, "1h00m")
 
 

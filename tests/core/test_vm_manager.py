@@ -2,9 +2,9 @@ import os
 
 import pytest
 
-from qemu_cli.core.descriptor import VmDescriptor
+from qemu_cli.core.vm_descriptor import VirtualMachineDescriptor
 from qemu_cli.core.errors import QemuCliError
-from qemu_cli.core.vm_manager import VmManager
+from qemu_cli.core.vm_manager import VirtualMachineManager
 
 
 def _touch_ini(directory, name, body="[vm]\ncmdline = qemu-system-x86_64\n"):
@@ -18,29 +18,29 @@ def _touch_ini(directory, name, body="[vm]\ncmdline = qemu-system-x86_64\n"):
 def _descriptor(name="vm", cmdline="qemu-system-x86_64", **kwargs):
     kwargs.setdefault("workdir", os.getcwd())
     kwargs.setdefault("created", "2024-01-01T00:00:00")
-    return VmDescriptor(name=name, cmdline=cmdline, **kwargs)
+    return VirtualMachineDescriptor(name=name, cmdline=cmdline, **kwargs)
 
 
 # -- path_for --------------------------------------------------------------
 
 def test_path_for_returns_none_when_not_found(isolated_dirs):
-    assert VmManager().path_for("missing") is None
+    assert VirtualMachineManager().path_for("missing") is None
 
 
 def test_path_for_finds_definition_in_user_dir(isolated_dirs):
     path = _touch_ini(isolated_dirs.user_dir, "myvm")
-    assert VmManager().path_for("myvm") == path
+    assert VirtualMachineManager().path_for("myvm") == path
 
 
 def test_path_for_finds_definition_in_system_dir(isolated_dirs):
     path = _touch_ini(isolated_dirs.system_dir, "myvm")
-    assert VmManager().path_for("myvm") == path
+    assert VirtualMachineManager().path_for("myvm") == path
 
 
 def test_path_for_user_dir_takes_priority_over_system_dir(isolated_dirs):
     _touch_ini(isolated_dirs.system_dir, "myvm")
     user_path = _touch_ini(isolated_dirs.user_dir, "myvm")
-    assert VmManager().path_for("myvm") == user_path
+    assert VirtualMachineManager().path_for("myvm") == user_path
 
 
 # -- create ------------------------------------------------------------
@@ -48,21 +48,21 @@ def test_path_for_user_dir_takes_priority_over_system_dir(isolated_dirs):
 @pytest.mark.parametrize("name", ["", "a/b"])
 def test_create_invalid_name_raises(isolated_dirs, name):
     with pytest.raises(QemuCliError, match="invalid vm name"):
-        VmManager().create(_descriptor(name=name))
+        VirtualMachineManager().create(_descriptor(name=name))
 
 
 def test_create_empty_cmdline_raises(isolated_dirs):
     with pytest.raises(QemuCliError, match="empty --cmdline"):
-        VmManager().create(_descriptor(cmdline="   "))
+        VirtualMachineManager().create(_descriptor(cmdline="   "))
 
 
 def test_create_unparsable_cmdline_raises(isolated_dirs):
     with pytest.raises(QemuCliError, match="cannot parse cmdline"):
-        VmManager().create(_descriptor(cmdline="qemu 'unterminated"))
+        VirtualMachineManager().create(_descriptor(cmdline="qemu 'unterminated"))
 
 
 def test_create_writes_a_loadable_ini_file(isolated_dirs):
-    manager = VmManager()
+    manager = VirtualMachineManager()
     dest = manager.create(_descriptor(cmdline="qemu-system-x86_64 -m 512"))
     assert os.path.isfile(dest)
     loaded = manager.load("vm")
@@ -72,21 +72,21 @@ def test_create_writes_a_loadable_ini_file(isolated_dirs):
 
 
 def test_create_refuses_to_overwrite_without_force(isolated_dirs):
-    manager = VmManager()
+    manager = VirtualMachineManager()
     manager.create(_descriptor())
     with pytest.raises(QemuCliError, match="already exists"):
         manager.create(_descriptor(cmdline="qemu-system-x86_64 -m 1024"))
 
 
 def test_create_force_overwrites_existing_definition(isolated_dirs):
-    manager = VmManager()
+    manager = VirtualMachineManager()
     manager.create(_descriptor())
     manager.create(_descriptor(cmdline="qemu-system-x86_64 -m 2048"), force=True)
     assert manager.load("vm").cmdline == "qemu-system-x86_64 -m 2048"
 
 
 def test_create_stores_pre_and_post_hooks(isolated_dirs):
-    manager = VmManager()
+    manager = VirtualMachineManager()
     manager.create(_descriptor(
         pre_hook=["ip tuntap add tap0", "ip link set tap0 up"],
         post_hook=["ip tuntap del tap0"],
@@ -100,31 +100,31 @@ def test_create_stores_pre_and_post_hooks(isolated_dirs):
 
 def test_load_missing_vm_raises(isolated_dirs):
     with pytest.raises(QemuCliError, match="no such vm"):
-        VmManager().load("nope")
+        VirtualMachineManager().load("nope")
 
 
 def test_load_missing_vm_section_is_corrupt(isolated_dirs):
     _touch_ini(isolated_dirs.user_dir, "broken", "[other]\nfoo = bar\n")
     with pytest.raises(QemuCliError, match="corrupt definition"):
-        VmManager().load("broken")
+        VirtualMachineManager().load("broken")
 
 
 def test_load_missing_cmdline_key_is_corrupt(isolated_dirs):
     _touch_ini(isolated_dirs.user_dir, "broken", "[vm]\nname = broken\n")
     with pytest.raises(QemuCliError, match="corrupt definition"):
-        VmManager().load("broken")
+        VirtualMachineManager().load("broken")
 
 
 def test_load_a_valid_definition(isolated_dirs):
     _touch_ini(isolated_dirs.user_dir, "vm", "[vm]\ncmdline = qemu-system-x86_64 -m 512\n")
-    d = VmManager().load("vm")
+    d = VirtualMachineManager().load("vm")
     assert d.cmdline == "qemu-system-x86_64 -m 512"
 
 
 # -- list ------------------------------------------------------------------
 
 def test_list_empty_when_no_vms_defined(isolated_dirs):
-    assert VmManager().list() == []
+    assert VirtualMachineManager().list() == []
 
 
 def test_list_ignores_non_ini_files(isolated_dirs):
@@ -134,26 +134,26 @@ def test_list_ignores_non_ini_files(isolated_dirs):
         fh.write("")
     with open(os.path.join(isolated_dirs.user_dir, "b.ini.bak"), "w") as fh:
         fh.write("")
-    assert {d.name for d in VmManager().list()} == {"a"}
+    assert {d.name for d in VirtualMachineManager().list()} == {"a"}
 
 
 def test_list_merges_across_stores(isolated_dirs):
     _touch_ini(isolated_dirs.user_dir, "u")
     _touch_ini(isolated_dirs.system_dir, "s")
-    assert {d.name for d in VmManager().list()} == {"u", "s"}
+    assert {d.name for d in VirtualMachineManager().list()} == {"u", "s"}
 
 
 def test_list_user_store_wins_on_name_collision(isolated_dirs):
     _touch_ini(isolated_dirs.system_dir, "vm", "[vm]\ncmdline = system-binary\n")
     _touch_ini(isolated_dirs.user_dir, "vm", "[vm]\ncmdline = user-binary\n")
-    entries = VmManager().list()
+    entries = VirtualMachineManager().list()
     assert len(entries) == 1
     assert entries[0].cmdline == "user-binary"
 
 
 def test_list_tolerates_a_corrupt_definition(isolated_dirs):
     _touch_ini(isolated_dirs.user_dir, "broken", "[vm]\n")
-    entries = VmManager().list()
+    entries = VirtualMachineManager().list()
     assert entries[0].cmdline == ""
 
 
@@ -161,12 +161,12 @@ def test_list_tolerates_a_corrupt_definition(isolated_dirs):
 
 def test_remove_missing_vm_raises(isolated_dirs):
     with pytest.raises(QemuCliError, match="no such vm"):
-        VmManager().remove("nope")
+        VirtualMachineManager().remove("nope")
 
 
 def test_remove_deletes_the_definition_file(isolated_dirs):
     path = _touch_ini(isolated_dirs.user_dir, "vm")
-    manager = VmManager()
+    manager = VirtualMachineManager()
     result = manager.remove("vm")
     assert result == path
     assert not os.path.exists(path)
@@ -182,4 +182,4 @@ def test_remove_permission_denied_is_translated_to_qemu_cli_error(isolated_dirs,
 
     monkeypatch.setattr(vm_manager_module.os, "unlink", fake_unlink)
     with pytest.raises(QemuCliError, match="permission denied"):
-        VmManager().remove("vm")
+        VirtualMachineManager().remove("vm")

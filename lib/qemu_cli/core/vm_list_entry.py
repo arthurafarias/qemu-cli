@@ -2,7 +2,7 @@ import dataclasses
 
 
 @dataclasses.dataclass
-class VmListEntry:
+class VirtualMachineListEntry:
     name: str
     path: str
     binary: str

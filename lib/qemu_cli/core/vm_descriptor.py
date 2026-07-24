@@ -3,7 +3,7 @@ from typing import List
 
 
 @dataclasses.dataclass
-class VmDescriptor:
+class VirtualMachineDescriptor:
     name: str
     cmdline: str
     workdir: str

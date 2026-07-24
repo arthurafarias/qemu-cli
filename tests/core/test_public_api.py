@@ -10,7 +10,7 @@ import inspect
 import qemu_cli.core as core
 from qemu_cli.core.errors import QemuCliError
 
-DATACLASS_EXPORTS = {"VmDescriptor", "VmListEntry", "VmProcEntry", "RunResult", "StopResult"}
+DATACLASS_EXPORTS = {"VirtualMachineDescriptor", "VirtualMachineListEntry", "VirtualMachineProcEntry", "RunResult", "StopResult"}
 
 FUNCTION_EXPORTS = {
     "stores", "write_store",
@@ -18,7 +18,7 @@ FUNCTION_EXPORTS = {
     "serialize_descriptor", "deserialize_descriptor",
 }
 
-CLASS_EXPORTS = {"VmManager", "ProcessEngine", "VmLifecycleManager"}
+CLASS_EXPORTS = {"VirtualMachineManager", "ProcessEngine", "VirtualMachineLifecycleManager"}
 
 CONSTANT_EXPORTS = {"STATE_DIR", "SYSTEM_DIR", "USER_DIR", "debug_logger"}
 

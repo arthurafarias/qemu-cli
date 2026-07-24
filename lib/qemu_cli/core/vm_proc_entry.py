@@ -2,7 +2,7 @@ import dataclasses
 
 
 @dataclasses.dataclass
-class VmProcEntry:
+class VirtualMachineProcEntry:
     name: str
     pid: int
     uptime: str

@@ -5,7 +5,7 @@ from typing import Optional
 
 from .config import Logger, STATE_DIR
 from .debug_log import trace
-from .descriptor import VmDescriptor
+from .vm_descriptor import VirtualMachineDescriptor
 from .errors import QemuCliError
 from .null_log import null_log
 from .process_engine import ProcessEngine
@@ -15,8 +15,8 @@ from .run_result import RunResult
 from .stop_result import StopResult
 
 
-class VmLifecycleManager:
-    """Drives the qemu process lifecycle for a VmDescriptor: run (foreground
+class VirtualMachineLifecycleManager:
+    """Drives the qemu process lifecycle for a VirtualMachineDescriptor: run (foreground
     or detached), stop, and status/uptime queries. Built on ProcessEngine
     for the actual os/subprocess work."""
 
@@ -24,7 +24,7 @@ class VmLifecycleManager:
         self.engine = engine or ProcessEngine()
 
     @trace
-    def status(self, descriptor: VmDescriptor) -> Optional[int]:
+    def status(self, descriptor: VirtualMachineDescriptor) -> Optional[int]:
         return self.engine.running_pid(descriptor.name)
 
     @trace
@@ -34,7 +34,7 @@ class VmLifecycleManager:
         return bool(self.engine.running_pid(name))
 
     @trace
-    def uptime(self, descriptor: VmDescriptor) -> str:
+    def uptime(self, descriptor: VirtualMachineDescriptor) -> str:
         started = self.engine.started_at(descriptor.name)
         if started is None:
             return "?"
@@ -42,7 +42,7 @@ class VmLifecycleManager:
         return f"{up // 3600}h{(up % 3600) // 60:02d}m"
 
     @trace
-    def run(self, descriptor: VmDescriptor, extra_args=(), detach: bool = False,
+    def run(self, descriptor: VirtualMachineDescriptor, extra_args=(), detach: bool = False,
             log: Logger = null_log) -> RunResult:
         if self.engine.running_pid(descriptor.name):
             raise QemuCliError(f"vm '{descriptor.name}' is already running")
@@ -81,7 +81,7 @@ class VmLifecycleManager:
         return RunResult(detached=False, returncode=rc, post_hook_failures=failures)
 
     @trace
-    def stop(self, descriptor: VmDescriptor, timeout: float = 10.0) -> StopResult:
+    def stop(self, descriptor: VirtualMachineDescriptor, timeout: float = 10.0) -> StopResult:
         pid = self.engine.running_pid(descriptor.name)
         if not pid:
             raise QemuCliError(f"vm '{descriptor.name}' is not running")

@@ -6,10 +6,10 @@ dataclasses) so it can be driven by a CLI, tests, or anything else.
 
 Two services form the core API:
 
-- `VmManager` persists/retrieves `VmDescriptor`s (vm definitions) to/from
+- `VirtualMachineManager` persists/retrieves `VirtualMachineDescriptor`s (vm definitions) to/from
   disk, via `serialize_descriptor`/`deserialize_descriptor`.
-- `VmLifecycleManager` drives the qemu process lifecycle for a
-  `VmDescriptor` — run (foreground/detached), stop, status/uptime — built on
+- `VirtualMachineLifecycleManager` drives the qemu process lifecycle for a
+  `VirtualMachineDescriptor` — run (foreground/detached), stop, status/uptime — built on
   `ProcessEngine`, the thin os/subprocess wrapper.
 
 Every class and function in this package is decorated with
@@ -22,9 +22,9 @@ handler is configured); enable it with `qemu --debug ...` or by calling
 from .config import STATE_DIR, SYSTEM_DIR, USER_DIR
 from .debug_log import logger as debug_logger
 from .errors import QemuCliError
-from .descriptor import VmDescriptor
-from .vm_list_entry import VmListEntry
-from .vm_proc_entry import VmProcEntry
+from .vm_descriptor import VirtualMachineDescriptor
+from .vm_list_entry import VirtualMachineListEntry
+from .vm_proc_entry import VirtualMachineProcEntry
 from .run_result import RunResult
 from .stop_result import StopResult
 
@@ -36,17 +36,17 @@ from .run_post_hooks import run_post_hooks
 
 from .serialization import serialize_descriptor, deserialize_descriptor
 
-from .vm_manager import VmManager
+from .vm_manager import VirtualMachineManager
 from .process_engine import ProcessEngine
-from .vm_lifecycle_manager import VmLifecycleManager
+from .vm_lifecycle_manager import VirtualMachineLifecycleManager
 
 __all__ = [
     "STATE_DIR", "SYSTEM_DIR", "USER_DIR",
     "debug_logger",
     "QemuCliError",
-    "VmDescriptor", "VmListEntry", "VmProcEntry", "RunResult", "StopResult",
+    "VirtualMachineDescriptor", "VirtualMachineListEntry", "VirtualMachineProcEntry", "RunResult", "StopResult",
     "stores", "write_store",
     "get_hooks", "run_pre_hooks", "run_post_hooks",
     "serialize_descriptor", "deserialize_descriptor",
-    "VmManager", "ProcessEngine", "VmLifecycleManager",
+    "VirtualMachineManager", "ProcessEngine", "VirtualMachineLifecycleManager",
 ]

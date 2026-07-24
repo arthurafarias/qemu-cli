@@ -4,15 +4,15 @@ import shlex
 from typing import List, Optional
 
 from .debug_log import trace
-from .descriptor import VmDescriptor
+from .vm_descriptor import VirtualMachineDescriptor
 from .errors import QemuCliError
 from .serialization import deserialize_descriptor, serialize_descriptor
 from .stores import stores
 from .write_store import write_store
 
 
-class VmManager:
-    """Persists and retrieves VmDescriptors. Owns the on-disk vm definition
+class VirtualMachineManager:
+    """Persists and retrieves VirtualMachineDescriptors. Owns the on-disk vm definition
     store; knows nothing about running qemu processes."""
 
     @trace
@@ -24,7 +24,7 @@ class VmManager:
         return None
 
     @trace
-    def create(self, descriptor: VmDescriptor, force: bool = False) -> str:
+    def create(self, descriptor: VirtualMachineDescriptor, force: bool = False) -> str:
         if not descriptor.name or "/" in descriptor.name:
             raise QemuCliError("invalid vm name")
         if self.path_for(descriptor.name) and not force:
@@ -47,7 +47,7 @@ class VmManager:
         return dest
 
     @trace
-    def load(self, name: str) -> VmDescriptor:
+    def load(self, name: str) -> VirtualMachineDescriptor:
         p = self.path_for(name)
         if not p:
             raise QemuCliError(f"no such vm: {name}")
@@ -58,7 +58,7 @@ class VmManager:
         return descriptor
 
     @trace
-    def list(self) -> List[VmDescriptor]:
+    def list(self) -> List[VirtualMachineDescriptor]:
         out = []
         for name, path in self._discover().items():
             with open(path) as fh:

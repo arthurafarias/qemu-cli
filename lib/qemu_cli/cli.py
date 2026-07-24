@@ -2,8 +2,8 @@
 
 This module is a thin presentation layer: every command decorates a
 function whose body parses/echoes and then calls straight into
-qemu_cli.core's VmManager (vm definition persistence) and
-VmLifecycleManager (qemu process lifecycle), which hold all the actual
+qemu_cli.core's VirtualMachineManager (vm definition persistence) and
+VirtualMachineLifecycleManager (qemu process lifecycle), which hold all the actual
 business logic.
 """
 
@@ -75,7 +75,7 @@ def vm_group():
               help="shell command to run after the vm exits (repeatable)")
 @handle_errors
 def vm_create(name, cmdline, force, pre_hook, post_hook):
-    descriptor = core.VmDescriptor(
+    descriptor = core.VirtualMachineDescriptor(
         name=name,
         cmdline=cmdline,
         workdir=os.getcwd(),
@@ -83,15 +83,15 @@ def vm_create(name, cmdline, force, pre_hook, post_hook):
         pre_hook=list(pre_hook),
         post_hook=list(post_hook),
     )
-    dest = core.VmManager().create(descriptor, force=force)
+    dest = core.VirtualMachineManager().create(descriptor, force=force)
     click.echo(f"{name}  ->  {dest}")
 
 
 @vm_group.command("list", help="list defined vms")
 @handle_errors
 def vm_list():
-    vm_manager = core.VmManager()
-    lifecycle = core.VmLifecycleManager()
+    vm_manager = core.VirtualMachineManager()
+    lifecycle = core.VirtualMachineLifecycleManager()
     descriptors = vm_manager.list()
     if not descriptors:
         click.echo("no vms defined")
@@ -107,8 +107,8 @@ def vm_list():
 @vm_group.command("ps", help="list running vms")
 @handle_errors
 def vm_ps():
-    vm_manager = core.VmManager()
-    lifecycle = core.VmLifecycleManager()
+    vm_manager = core.VirtualMachineManager()
+    lifecycle = core.VirtualMachineLifecycleManager()
     rows = []
     for d in vm_manager.list():
         pid = lifecycle.status(d)
@@ -127,8 +127,8 @@ def vm_ps():
 @click.argument("name")
 @handle_errors
 def vm_inspect(name):
-    vm_manager = core.VmManager()
-    lifecycle = core.VmLifecycleManager()
+    vm_manager = core.VirtualMachineManager()
+    lifecycle = core.VirtualMachineLifecycleManager()
     d = vm_manager.load(name)
     path = vm_manager.path_for(name)
     pid = lifecycle.status(d)
@@ -149,8 +149,8 @@ def vm_inspect(name):
 @click.argument("name")
 @handle_errors
 def vm_remove(name):
-    vm_manager = core.VmManager()
-    lifecycle = core.VmLifecycleManager()
+    vm_manager = core.VirtualMachineManager()
+    lifecycle = core.VirtualMachineLifecycleManager()
     if not vm_manager.path_for(name):
         raise core.QemuCliError(f"no such vm: {name}")
     if lifecycle.is_running(name):
@@ -169,8 +169,8 @@ vm_group.add_command(vm_remove, name="rm")
 @click.argument("extra", nargs=-1, type=click.UNPROCESSED)
 @handle_errors
 def run_cmd(name, detach, extra):
-    vm_manager = core.VmManager()
-    lifecycle = core.VmLifecycleManager()
+    vm_manager = core.VirtualMachineManager()
+    lifecycle = core.VirtualMachineLifecycleManager()
     descriptor = vm_manager.load(name)
     result = lifecycle.run(descriptor, extra_args=extra, detach=detach, log=click.echo)
     if result.detached:
@@ -186,8 +186,8 @@ def run_cmd(name, detach, extra):
 @click.option("-t", "--timeout", type=float, default=10.0)
 @handle_errors
 def stop_cmd(name, timeout):
-    vm_manager = core.VmManager()
-    lifecycle = core.VmLifecycleManager()
+    vm_manager = core.VirtualMachineManager()
+    lifecycle = core.VirtualMachineLifecycleManager()
     descriptor = vm_manager.load(name)
     result = lifecycle.stop(descriptor, timeout=timeout)
     if result.force_killed:
