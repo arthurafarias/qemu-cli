@@ -1,0 +1,16 @@
+[project]
+name = "qemu-cli"
+version = "0.1.0"
+description = "Docker-style CLI for managing QEMU VM command lines"
+requires-python = ">=3.9"
+dependencies = ["click>=8"]
+
+[project.scripts]
+qemu = "qemu_cli.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "lib"}
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
