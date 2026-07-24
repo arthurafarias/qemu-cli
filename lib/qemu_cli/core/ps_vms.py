@@ -3,11 +3,13 @@ import time
 from typing import List
 
 from .all_vms import all_vms
+from .debug_log import trace
 from .pidfile import pidfile
 from .running_pid import running_pid
 from .vm_proc_entry import VmProcEntry
 
 
+@trace
 def ps_vms() -> List[VmProcEntry]:
     rows = []
     for name in all_vms():

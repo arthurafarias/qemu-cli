@@ -1,10 +1,12 @@
 import os
 
+from .debug_log import trace
 from .errors import QemuCliError
 from .running_pid import running_pid
 from .vm_path import vm_path
 
 
+@trace
 def remove_vm(name: str) -> str:
     p = vm_path(name)
     if not p:

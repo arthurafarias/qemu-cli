@@ -6,6 +6,7 @@ qemu_cli.core, which holds all the actual business logic.
 """
 
 import functools
+import logging
 
 import click
 
@@ -42,8 +43,16 @@ def handle_errors(fn):
 
 
 @click.group(help=HELP_INTRO)
-def main():
-    pass
+@click.option("--debug", is_flag=True, envvar="QEMU_CLI_DEBUG",
+              help="log every core function call to stderr")
+def main(debug):
+    if debug:
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="%(asctime)s %(name)s %(message)s",
+            datefmt="%H:%M:%S",
+        )
+        core.debug_logger.setLevel(logging.DEBUG)
 
 
 @main.group("vm", help="manage vm definitions")

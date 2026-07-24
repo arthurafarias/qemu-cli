@@ -7,9 +7,16 @@ dataclasses) so it can be driven by a CLI, tests, or anything else.
 Every class and every function lives in its own module; this file just
 re-exports the public API so callers can keep writing `core.create_vm(...)`,
 `core.QemuCliError`, etc.
+
+Every function in this package is decorated with `debug_log.trace`, which
+logs its call, return value, and any exception to the "qemu_cli.core"
+logger at DEBUG level. Logging is silent by default (no handler is
+configured); enable it with `qemu --debug ...` or by calling
+`logging.basicConfig(level=logging.DEBUG)` yourself.
 """
 
 from .config import STATE_DIR, SYSTEM_DIR, USER_DIR
+from .debug_log import logger as debug_logger
 from .errors import QemuCliError
 from .vm_list_entry import VmListEntry
 from .vm_proc_entry import VmProcEntry
@@ -43,6 +50,7 @@ from .stop_vm import stop_vm
 
 __all__ = [
     "STATE_DIR", "SYSTEM_DIR", "USER_DIR",
+    "debug_logger",
     "QemuCliError",
     "VmListEntry", "VmProcEntry", "VmDetail", "RunResult", "StopResult",
     "stores", "write_store", "vm_path", "load_vm", "all_vms",

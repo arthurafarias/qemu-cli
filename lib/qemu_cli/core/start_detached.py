@@ -2,12 +2,14 @@ import os
 import subprocess
 
 from .config import Logger, STATE_DIR
+from .debug_log import trace
 from .errors import QemuCliError
 from .null_log import null_log
 from .pidfile import pidfile
 from .run_post_hooks import run_post_hooks
 
 
+@trace
 def start_detached(name, argv, workdir, post_hooks, log: Logger = null_log) -> int:
     """Start argv detached; if there are post-hooks, keep a background
     monitor process around to run them once the vm actually exits

@@ -1,8 +1,10 @@
 import os
 
+from .debug_log import trace
 from .stores import stores
 
 
+@trace
 def all_vms() -> dict:
     seen = {}
     for d in stores():

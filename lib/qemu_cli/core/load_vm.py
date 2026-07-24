@@ -1,11 +1,13 @@
 import configparser
 from typing import Tuple
 
+from .debug_log import trace
 from .errors import QemuCliError
 from .read_ini import read_ini
 from .vm_path import vm_path
 
 
+@trace
 def load_vm(name: str) -> Tuple[configparser.SectionProxy, str]:
     p = vm_path(name)
     if not p:

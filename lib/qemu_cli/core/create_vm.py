@@ -3,11 +3,13 @@ import datetime
 import os
 import shlex
 
+from .debug_log import trace
 from .errors import QemuCliError
 from .vm_path import vm_path
 from .write_store import write_store
 
 
+@trace
 def create_vm(name, cmdline, force=False, pre_hook=None, post_hook=None) -> str:
     if not name or "/" in name:
         raise QemuCliError("invalid vm name")

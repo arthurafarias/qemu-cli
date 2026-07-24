@@ -1,9 +1,11 @@
+from .debug_log import trace
 from .get_hooks import get_hooks
 from .load_vm import load_vm
 from .running_pid import running_pid
 from .vm_detail import VmDetail
 
 
+@trace
 def inspect_vm(name: str) -> VmDetail:
     vm, path = load_vm(name)
     return VmDetail(

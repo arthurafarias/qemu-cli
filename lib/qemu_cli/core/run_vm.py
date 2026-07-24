@@ -3,6 +3,7 @@ import shlex
 import subprocess
 
 from .config import Logger, STATE_DIR
+from .debug_log import trace
 from .errors import QemuCliError
 from .get_hooks import get_hooks
 from .load_vm import load_vm
@@ -15,6 +16,7 @@ from .running_pid import running_pid
 from .start_detached import start_detached
 
 
+@trace
 def run_vm(name: str, extra_args=(), detach=False, log: Logger = null_log) -> RunResult:
     vm, _ = load_vm(name)
     if running_pid(name):

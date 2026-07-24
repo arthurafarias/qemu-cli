@@ -1,7 +1,10 @@
 import os
 from typing import Optional
 
+from .debug_log import trace
 
+
+@trace
 def alive(pid: Optional[int]) -> bool:
     if pid is None:
         return False

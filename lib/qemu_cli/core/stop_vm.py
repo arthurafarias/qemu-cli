@@ -3,12 +3,14 @@ import signal
 import time
 
 from .alive import alive
+from .debug_log import trace
 from .errors import QemuCliError
 from .pidfile import pidfile
 from .running_pid import running_pid
 from .stop_result import StopResult
 
 
+@trace
 def stop_vm(name: str, timeout: float = 10.0) -> StopResult:
     pid = running_pid(name)
     if not pid:

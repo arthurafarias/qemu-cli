@@ -1,8 +1,10 @@
 import os
 
 from .config import SYSTEM_DIR, USER_DIR
+from .debug_log import trace
 
 
+@trace
 def write_store() -> str:
     """Preferred directory for writes: /etc if writable, else user config."""
     try:
