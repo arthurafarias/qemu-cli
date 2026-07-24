@@ -1,5 +1,7 @@
 # qemu-cli
 
+[![test coverage](https://arthurafarias.github.io/qemu-cli/coverage-badge.svg)](https://arthurafarias.github.io/qemu-cli/coverage/)
+
 A docker-style CLI for managing QEMU VM command lines. Instead of retyping
 long `qemu-system-x86_64 ...` invocations, save them once as named VM
 definitions and start/stop/inspect them like containers.

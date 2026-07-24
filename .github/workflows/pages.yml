@@ -29,10 +29,13 @@ jobs:
           python-version: "3.12"
 
       - name: Install package and test dependencies
-        run: pip install -e ".[test]"
+        run: pip install -e ".[test]" "genbadge[coverage]"
 
       - name: Run tests with coverage
-        run: python -m pytest --cov-report=html:_site/coverage
+        run: python -m pytest --cov-report=html:_site/coverage --cov-report=xml
+
+      - name: Generate coverage badge
+        run: genbadge coverage -i coverage.xml -o _site/coverage-badge.svg
 
       - name: Assemble site
         run: cp -r docs/. _site/
