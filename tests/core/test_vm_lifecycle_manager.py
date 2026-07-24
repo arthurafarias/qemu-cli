@@ -6,7 +6,7 @@ import time
 import pytest
 
 from qemu_cli.core.vm_descriptor import VirtualMachineDescriptor
-from qemu_cli.core.errors import QemuCliError
+from qemu_cli.core.errors import QemuCLIError
 from qemu_cli.core.pidfile import pidfile
 from qemu_cli.core.vm_lifecycle_manager import VirtualMachineLifecycleManager
 
@@ -23,7 +23,7 @@ def _descriptor(name="vm", cmdline="true", workdir=None, pre_hook=None, post_hoo
 def test_run_already_running_raises(isolated_dirs, monkeypatch):
     lifecycle = VirtualMachineLifecycleManager()
     monkeypatch.setattr(lifecycle.engine, "running_pid", lambda name: 111)
-    with pytest.raises(QemuCliError, match="already running"):
+    with pytest.raises(QemuCLIError, match="already running"):
         lifecycle.run(_descriptor())
 
 
@@ -49,7 +49,7 @@ def test_run_extra_args_are_appended_to_the_cmdline(isolated_dirs, tmp_path):
 
 def test_run_binary_not_found_raises(isolated_dirs, tmp_path):
     lifecycle = VirtualMachineLifecycleManager()
-    with pytest.raises(QemuCliError, match="binary not found"):
+    with pytest.raises(QemuCLIError, match="binary not found"):
         lifecycle.run(_descriptor(cmdline="/no/such/binary", workdir=str(tmp_path)))
 
 
@@ -62,7 +62,7 @@ def test_run_falls_back_to_cwd_when_workdir_is_missing(isolated_dirs, tmp_path):
 def test_run_pre_hook_failure_prevents_the_vm_from_starting(isolated_dirs, tmp_path):
     marker = tmp_path / "should-not-exist"
     lifecycle = VirtualMachineLifecycleManager()
-    with pytest.raises(QemuCliError, match="pre-hook failed"):
+    with pytest.raises(QemuCLIError, match="pre-hook failed"):
         lifecycle.run(_descriptor(
             cmdline=f"touch {marker}", workdir=str(tmp_path), pre_hook=["exit 1"],
         ))
@@ -141,7 +141,7 @@ def test_run_detach_with_post_hooks_uses_monitor(isolated_dirs, tmp_path, monkey
 # -- stop ------------------------------------------------------------------
 
 def test_stop_not_running_raises(isolated_dirs):
-    with pytest.raises(QemuCliError, match="is not running"):
+    with pytest.raises(QemuCLIError, match="is not running"):
         VirtualMachineLifecycleManager().stop(_descriptor())
 
 

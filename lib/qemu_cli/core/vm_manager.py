@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from .debug_log import trace
 from .vm_descriptor import VirtualMachineDescriptor
-from .errors import QemuCliError
+from .errors import QemuCLIError
 from .serialization import deserialize_descriptor, serialize_descriptor
 from .stores import stores
 from .write_store import write_store
@@ -26,19 +26,19 @@ class VirtualMachineManager:
     @trace
     def create(self, descriptor: VirtualMachineDescriptor, force: bool = False) -> str:
         if not descriptor.name or "/" in descriptor.name:
-            raise QemuCliError("invalid vm name")
+            raise QemuCLIError("invalid vm name")
         if self.path_for(descriptor.name) and not force:
-            raise QemuCliError(
+            raise QemuCLIError(
                 f"vm '{descriptor.name}' already exists (use -f to overwrite)")
         cmdline = descriptor.cmdline.strip()
         if not cmdline:
-            raise QemuCliError("empty --cmdline")
+            raise QemuCLIError("empty --cmdline")
         try:
             argv = shlex.split(cmdline)
         except ValueError as e:
-            raise QemuCliError(f"cannot parse cmdline: {e}") from e
+            raise QemuCLIError(f"cannot parse cmdline: {e}") from e
         if not argv:
-            raise QemuCliError("empty cmdline")
+            raise QemuCLIError("empty cmdline")
 
         descriptor = dataclasses.replace(descriptor, cmdline=cmdline)
         dest = os.path.join(write_store(), f"{descriptor.name}.ini")
@@ -50,11 +50,11 @@ class VirtualMachineManager:
     def load(self, name: str) -> VirtualMachineDescriptor:
         p = self.path_for(name)
         if not p:
-            raise QemuCliError(f"no such vm: {name}")
+            raise QemuCLIError(f"no such vm: {name}")
         with open(p) as fh:
             descriptor = deserialize_descriptor(name, fh.read())
         if not descriptor.cmdline:
-            raise QemuCliError(f"corrupt definition: {p}")
+            raise QemuCLIError(f"corrupt definition: {p}")
         return descriptor
 
     @trace
@@ -69,11 +69,11 @@ class VirtualMachineManager:
     def remove(self, name: str) -> str:
         p = self.path_for(name)
         if not p:
-            raise QemuCliError(f"no such vm: {name}")
+            raise QemuCLIError(f"no such vm: {name}")
         try:
             os.unlink(p)
         except PermissionError as e:
-            raise QemuCliError(f"permission denied removing {p} (try sudo)") from e
+            raise QemuCLIError(f"permission denied removing {p} (try sudo)") from e
         return p
 
     def _discover(self) -> dict:

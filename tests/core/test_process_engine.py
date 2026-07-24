@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from qemu_cli.core.errors import QemuCliError
+from qemu_cli.core.errors import QemuCLIError
 from qemu_cli.core.pidfile import pidfile
 from qemu_cli.core.process_engine import ProcessEngine
 
@@ -69,7 +69,7 @@ def test_started_at_returns_none_when_pidfile_is_missing(isolated_dirs):
 # -- spawn (foreground) -------------------------------------------------
 
 def test_spawn_binary_not_found_raises(isolated_dirs, tmp_path):
-    with pytest.raises(QemuCliError, match="binary not found"):
+    with pytest.raises(QemuCLIError, match="binary not found"):
         ProcessEngine().spawn(["/no/such/binary"], str(tmp_path))
 
 
@@ -94,7 +94,7 @@ def test_spawn_detached_spawns_and_writes_pidfile(isolated_dirs, tmp_path):
 
 
 def test_spawn_detached_binary_not_found_raises(isolated_dirs, tmp_path):
-    with pytest.raises(QemuCliError, match="binary not found"):
+    with pytest.raises(QemuCLIError, match="binary not found"):
         ProcessEngine().spawn_detached("vm", ["/no/such/binary"], str(tmp_path))
 
 
@@ -141,7 +141,7 @@ def test_spawn_detached_with_monitor_binary_not_found_raises(
     captured = {}
     _spy_on_fork(monkeypatch, captured)
 
-    with pytest.raises(QemuCliError, match="binary not found"):
+    with pytest.raises(QemuCLIError, match="binary not found"):
         ProcessEngine().spawn_detached_with_monitor(
             "vm", ["/no/such/binary"], str(tmp_path), on_exit=lambda: None,
         )

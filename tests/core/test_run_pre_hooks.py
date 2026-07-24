@@ -1,6 +1,6 @@
 import pytest
 
-from qemu_cli.core.errors import QemuCliError
+from qemu_cli.core.errors import QemuCLIError
 from qemu_cli.core.run_pre_hooks import run_pre_hooks
 
 
@@ -17,13 +17,13 @@ def test_runs_each_command_and_logs_it(tmp_path):
 
 
 def test_failing_command_raises_with_its_exit_code():
-    with pytest.raises(QemuCliError, match=r"exit 3"):
+    with pytest.raises(QemuCLIError, match=r"exit 3"):
         run_pre_hooks(["exit 3"])
 
 
 def test_stops_at_the_first_failure(tmp_path):
     marker = tmp_path / "marker"
-    with pytest.raises(QemuCliError):
+    with pytest.raises(QemuCLIError):
         run_pre_hooks(["exit 1", f"touch {marker}"])
     assert not marker.exists()
 

@@ -8,7 +8,7 @@ import dataclasses
 import inspect
 
 import qemu_cli.core as core
-from qemu_cli.core.errors import QemuCliError
+from qemu_cli.core.errors import QemuCLIError
 
 DATACLASS_EXPORTS = {"VirtualMachineDescriptor", "VirtualMachineListEntry", "VirtualMachineProcEntry", "RunResult", "StopResult"}
 
@@ -23,7 +23,7 @@ CLASS_EXPORTS = {"VirtualMachineManager", "ProcessEngine", "VirtualMachineLifecy
 CONSTANT_EXPORTS = {"STATE_DIR", "SYSTEM_DIR", "USER_DIR", "debug_logger"}
 
 EXPECTED_EXPORTS = (
-    CONSTANT_EXPORTS | {"QemuCliError"} | DATACLASS_EXPORTS | FUNCTION_EXPORTS | CLASS_EXPORTS
+    CONSTANT_EXPORTS | {"QemuCLIError"} | DATACLASS_EXPORTS | FUNCTION_EXPORTS | CLASS_EXPORTS
 )
 
 
@@ -37,8 +37,8 @@ def test_every_declared_export_is_importable():
 
 
 def test_error_type_is_the_documented_qemu_cli_error():
-    assert core.QemuCliError is QemuCliError
-    assert issubclass(core.QemuCliError, Exception)
+    assert core.QemuCLIError is QemuCLIError
+    assert issubclass(core.QemuCLIError, Exception)
 
 
 def test_dataclass_exports_are_dataclasses():

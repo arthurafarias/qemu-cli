@@ -1,7 +1,7 @@
 """Business logic for the qemu VM manager.
 
 Nothing in this package prints to stdout/stderr or calls sys.exit — it
-raises QemuCliError for expected failures and returns plain data (dicts,
+raises QemuCLIError for expected failures and returns plain data (dicts,
 dataclasses) so it can be driven by a CLI, tests, or anything else.
 
 Two services form the core API:
@@ -21,7 +21,7 @@ handler is configured); enable it with `qemu --debug ...` or by calling
 
 from .config import STATE_DIR, SYSTEM_DIR, USER_DIR
 from .debug_log import logger as debug_logger
-from .errors import QemuCliError
+from .errors import QemuCLIError
 from .vm_descriptor import VirtualMachineDescriptor
 from .vm_list_entry import VirtualMachineListEntry
 from .vm_proc_entry import VirtualMachineProcEntry
@@ -43,7 +43,7 @@ from .vm_lifecycle_manager import VirtualMachineLifecycleManager
 __all__ = [
     "STATE_DIR", "SYSTEM_DIR", "USER_DIR",
     "debug_logger",
-    "QemuCliError",
+    "QemuCLIError",
     "VirtualMachineDescriptor", "VirtualMachineListEntry", "VirtualMachineProcEntry", "RunResult", "StopResult",
     "stores", "write_store",
     "get_hooks", "run_pre_hooks", "run_post_hooks",

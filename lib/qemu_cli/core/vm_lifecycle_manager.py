@@ -6,7 +6,7 @@ from typing import Optional
 from .config import Logger, STATE_DIR
 from .debug_log import trace
 from .vm_descriptor import VirtualMachineDescriptor
-from .errors import QemuCliError
+from .errors import QemuCLIError
 from .null_log import null_log
 from .process_engine import ProcessEngine
 from .run_post_hooks import run_post_hooks
@@ -45,7 +45,7 @@ class VirtualMachineLifecycleManager:
     def run(self, descriptor: VirtualMachineDescriptor, extra_args=(), detach: bool = False,
             log: Logger = null_log) -> RunResult:
         if self.engine.running_pid(descriptor.name):
-            raise QemuCliError(f"vm '{descriptor.name}' is already running")
+            raise QemuCLIError(f"vm '{descriptor.name}' is already running")
 
         argv = shlex.split(descriptor.cmdline) + list(extra_args)
         argv = [os.path.expanduser(a) for a in argv]
@@ -84,7 +84,7 @@ class VirtualMachineLifecycleManager:
     def stop(self, descriptor: VirtualMachineDescriptor, timeout: float = 10.0) -> StopResult:
         pid = self.engine.running_pid(descriptor.name)
         if not pid:
-            raise QemuCliError(f"vm '{descriptor.name}' is not running")
+            raise QemuCLIError(f"vm '{descriptor.name}' is not running")
         force_killed = self.engine.terminate(pid, timeout=timeout)
         self.engine.clear_pidfile(descriptor.name)
         return StopResult(force_killed=force_killed)

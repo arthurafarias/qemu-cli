@@ -36,12 +36,12 @@ continuation lines for more than one command:
 
 
 def handle_errors(fn):
-    """Turn a core.QemuCliError into an `Error: ...` message + exit 1."""
+    """Turn a core.QemuCLIError into an `Error: ...` message + exit 1."""
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
-        except core.QemuCliError as e:
+        except core.QemuCLIError as e:
             click.echo(f"Error: {e}", err=True)
             raise SystemExit(1)
     return wrapper
@@ -152,9 +152,9 @@ def vm_remove(name):
     vm_manager = core.VirtualMachineManager()
     lifecycle = core.VirtualMachineLifecycleManager()
     if not vm_manager.path_for(name):
-        raise core.QemuCliError(f"no such vm: {name}")
+        raise core.QemuCLIError(f"no such vm: {name}")
     if lifecycle.is_running(name):
-        raise core.QemuCliError(f"vm '{name}' is running; stop it first")
+        raise core.QemuCLIError(f"vm '{name}' is running; stop it first")
     path = vm_manager.remove(name)
     click.echo(f"removed {path}")
 

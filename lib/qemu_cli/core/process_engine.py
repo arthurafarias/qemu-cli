@@ -7,7 +7,7 @@ from typing import Callable, List, Optional
 from .alive import alive
 from .config import STATE_DIR
 from .debug_log import trace
-from .errors import QemuCliError
+from .errors import QemuCLIError
 from .pidfile import pidfile
 from .read_pid import read_pid
 
@@ -30,7 +30,7 @@ class ProcessEngine:
         try:
             return subprocess.Popen(argv, cwd=cwd)
         except FileNotFoundError as e:
-            raise QemuCliError(f"binary not found: {argv[0]}") from e
+            raise QemuCLIError(f"binary not found: {argv[0]}") from e
 
     @trace
     def spawn_detached(self, name: str, argv: List[str], cwd: str) -> int:
@@ -40,7 +40,7 @@ class ProcessEngine:
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
             )
         except FileNotFoundError as e:
-            raise QemuCliError(f"binary not found: {argv[0]}") from e
+            raise QemuCLIError(f"binary not found: {argv[0]}") from e
         self._write_pidfile(name, proc.pid)
         return proc.pid
 
@@ -86,7 +86,7 @@ class ProcessEngine:
         with os.fdopen(r) as fh:
             reply = fh.readline().strip()
         if not reply or reply == "ERR":
-            raise QemuCliError(f"binary not found: {argv[0]}")
+            raise QemuCLIError(f"binary not found: {argv[0]}")
         return int(reply)
 
     @trace
