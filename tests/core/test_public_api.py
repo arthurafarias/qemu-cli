@@ -15,12 +15,17 @@ DATACLASS_EXPORTS = {"VirtualMachineDescriptor", "VirtualMachineListEntry", "Vir
 FUNCTION_EXPORTS = {
     "stores", "write_store",
     "get_hooks", "run_pre_hooks", "run_post_hooks",
-    "serialize_descriptor", "deserialize_descriptor",
+    "serialize_descriptor", "deserialize_descriptor", "verify_descriptor_version",
+    "fetch_descriptor", "download_image",
+    "installed_qemu_version", "verify_qemu_version", "version_satisfies",
 }
 
 CLASS_EXPORTS = {"VirtualMachineManager", "ProcessEngine", "VirtualMachineLifecycleManager"}
 
-CONSTANT_EXPORTS = {"STATE_DIR", "SYSTEM_DIR", "USER_DIR", "debug_logger"}
+CONSTANT_EXPORTS = {
+    "CACHE_DIR", "GIT_CACHE_DIR", "IMAGE_CACHE_DIR", "STATE_DIR", "SYSTEM_DIR", "USER_DIR",
+    "CURRENT_DESCRIPTOR_VERSION", "debug_logger",
+}
 
 EXPECTED_EXPORTS = (
     CONSTANT_EXPORTS | {"QemuCLIError"} | DATACLASS_EXPORTS | FUNCTION_EXPORTS | CLASS_EXPORTS

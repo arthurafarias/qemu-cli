@@ -12,5 +12,11 @@ STATE_DIR = os.path.join(
     os.environ.get("XDG_STATE_HOME", os.path.expanduser("~/.local/state")),
     "qemu-cli", "run",
 )
+CACHE_DIR = os.path.join(
+    os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")),
+    "qemu-cli",
+)
+GIT_CACHE_DIR = os.path.join(CACHE_DIR, "git")
+IMAGE_CACHE_DIR = os.path.join(CACHE_DIR, "images")
 
 Logger = Callable[[str], None]

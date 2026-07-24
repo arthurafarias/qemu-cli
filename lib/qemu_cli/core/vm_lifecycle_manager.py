@@ -9,6 +9,7 @@ from .vm_descriptor import VirtualMachineDescriptor
 from .errors import QemuCLIError
 from .null_log import null_log
 from .process_engine import ProcessEngine
+from .qemu_version_check import verify_qemu_version
 from .run_post_hooks import run_post_hooks
 from .run_pre_hooks import run_pre_hooks
 from .run_result import RunResult
@@ -46,6 +47,7 @@ class VirtualMachineLifecycleManager:
             log: Logger = null_log) -> RunResult:
         if self.engine.running_pid(descriptor.name):
             raise QemuCLIError(f"vm '{descriptor.name}' is already running")
+        verify_qemu_version(descriptor)
 
         argv = shlex.split(descriptor.cmdline) + list(extra_args)
         argv = [os.path.expanduser(a) for a in argv]

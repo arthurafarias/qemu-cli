@@ -121,6 +121,13 @@ def test_load_a_valid_definition(isolated_dirs):
     assert d.cmdline == "qemu-system-x86_64 -m 512"
 
 
+def test_load_unsupported_descriptor_version_raises(isolated_dirs):
+    _touch_ini(isolated_dirs.user_dir, "vm",
+               "[vm]\ncmdline = true\ndescriptor-version = 99\n")
+    with pytest.raises(QemuCLIError, match="unsupported descriptor-version: 99"):
+        VirtualMachineManager().load("vm")
+
+
 # -- list ------------------------------------------------------------------
 
 def test_list_empty_when_no_vms_defined(isolated_dirs):

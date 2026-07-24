@@ -11,10 +11,11 @@ from qemu_cli.core.pidfile import pidfile
 from qemu_cli.core.vm_lifecycle_manager import VirtualMachineLifecycleManager
 
 
-def _descriptor(name="vm", cmdline="true", workdir=None, pre_hook=None, post_hook=None):
+def _descriptor(name="vm", cmdline="true", workdir=None, pre_hook=None, post_hook=None,
+                 qemu_version=""):
     return VirtualMachineDescriptor(
         name=name, cmdline=cmdline, workdir=workdir or os.getcwd(), created="-",
-        pre_hook=pre_hook or [], post_hook=post_hook or [],
+        qemu_version=qemu_version, pre_hook=pre_hook or [], post_hook=post_hook or [],
     )
 
 
@@ -51,6 +52,28 @@ def test_run_binary_not_found_raises(isolated_dirs, tmp_path):
     lifecycle = VirtualMachineLifecycleManager()
     with pytest.raises(QemuCLIError, match="binary not found"):
         lifecycle.run(_descriptor(cmdline="/no/such/binary", workdir=str(tmp_path)))
+
+
+def test_run_qemu_version_mismatch_raises_before_spawning(isolated_dirs, tmp_path, monkeypatch):
+    import qemu_cli.core.qemu_version_check as version_check_module
+
+    marker = tmp_path / "should-not-exist"
+    monkeypatch.setattr(version_check_module, "installed_qemu_version", lambda binary: "7.0.0")
+    lifecycle = VirtualMachineLifecycleManager()
+    with pytest.raises(QemuCLIError, match="requires qemu >=8.0, found 7.0.0"):
+        lifecycle.run(_descriptor(
+            cmdline=f"touch {marker}", workdir=str(tmp_path), qemu_version=">=8.0",
+        ))
+    assert not marker.exists()
+
+
+def test_run_qemu_version_satisfied_allows_spawn(isolated_dirs, tmp_path, monkeypatch):
+    import qemu_cli.core.qemu_version_check as version_check_module
+
+    monkeypatch.setattr(version_check_module, "installed_qemu_version", lambda binary: "8.2.0")
+    lifecycle = VirtualMachineLifecycleManager()
+    result = lifecycle.run(_descriptor(workdir=str(tmp_path), qemu_version=">=8.0"))
+    assert result.returncode == 0
 
 
 def test_run_falls_back_to_cwd_when_workdir_is_missing(isolated_dirs, tmp_path):

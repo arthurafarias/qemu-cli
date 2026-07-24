@@ -18,6 +18,14 @@ def test_serialize_produces_ini_with_expected_fields():
     assert cfg["vm"]["cmdline"] == "qemu-system-x86_64 -m 512"
     assert cfg["vm"]["workdir"] == "/tmp"
     assert cfg["vm"]["created"] == "2024-01-01T00:00:00"
+    assert cfg["vm"]["descriptor-version"] == "1"
+
+
+def test_serialize_writes_qemu_version_when_set():
+    d = VirtualMachineDescriptor(name="vm", cmdline="true", workdir="/tmp", created="-",
+                                  qemu_version=">=8.0")
+    cfg = _parse(serialize_descriptor(d))
+    assert cfg["vm"]["qemu-version"] == ">=8.0"
 
 
 def test_serialize_joins_hooks_with_newline():
@@ -68,8 +76,17 @@ def test_deserialize_defaults_when_optional_fields_are_absent():
     d = deserialize_descriptor("vm", "[vm]\ncmdline = qemu-system-x86_64\n")
     assert d.created == "-"
     assert d.workdir == "-"
+    assert d.qemu_version == ""
+    assert d.descriptor_version == "1"
     assert d.pre_hook == []
     assert d.post_hook == []
+
+
+def test_deserialize_parses_qemu_version_and_descriptor_version():
+    text = "[vm]\ncmdline = true\nqemu-version = >=8.0\ndescriptor-version = 1\n"
+    d = deserialize_descriptor("vm", text)
+    assert d.qemu_version == ">=8.0"
+    assert d.descriptor_version == "1"
 
 
 def test_deserialize_parses_hooks_into_lists():
